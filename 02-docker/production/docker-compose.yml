@@ -12,8 +12,6 @@
 # Stop:  docker compose down
 # ============================================================
 
-version: "3.9"
-
 services:
 
   # ──────────────────────────────────────
@@ -74,7 +72,8 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      # qdrant image does not include curl/wget, so use process-based health check
+      test: ["CMD", "pidof", "qdrant"]
       interval: 15s
       timeout: 5s
       retries: 3

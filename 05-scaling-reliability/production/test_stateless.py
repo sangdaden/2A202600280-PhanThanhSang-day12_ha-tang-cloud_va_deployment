@@ -11,11 +11,32 @@ Chạy sau khi docker compose up:
     python test_stateless.py
 """
 import json
+import time
 import urllib.request
 import urllib.error
 
 BASE_URL = "http://localhost:8080"
 session_id = None
+
+
+def wait_until_ready(timeout_seconds: int = 60) -> None:
+    """Chờ stack sẵn sàng trước khi bắt đầu test."""
+    deadline = time.time() + timeout_seconds
+    last_error = None
+
+    while time.time() < deadline:
+        try:
+            status = get("/ready")
+            if status.get("ready") is True:
+                return
+        except Exception as exc:
+            last_error = exc
+        time.sleep(1)
+
+    raise RuntimeError(
+        f"Service at {BASE_URL} is not ready after {timeout_seconds}s. "
+        f"Last error: {last_error}"
+    )
 
 
 def post(path: str, data: dict) -> dict:
@@ -37,6 +58,8 @@ def get(path: str) -> dict:
 print("=" * 60)
 print("Stateless Scaling Demo")
 print("=" * 60)
+
+wait_until_ready()
 
 questions = [
     "What is Docker?",

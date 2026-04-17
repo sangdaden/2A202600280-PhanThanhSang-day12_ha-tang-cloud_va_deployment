@@ -85,5 +85,10 @@ def health():
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     print(f"API Key: {API_KEY}")
-    print(f"Test: curl -H 'X-API-Key: {API_KEY}' http://localhost:{port}/ask?question=hello")
-    uvicorn.run(app, host="0.0.0.0", port=port, reload=True)
+    print(
+        "Test: "
+        f"curl -X POST -H 'X-API-Key: {API_KEY}' "
+        f"http://localhost:{port}/ask?question=hello"
+    )
+    # Use import string when reload=True to avoid Uvicorn warning.
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)

@@ -172,19 +172,27 @@ def ready():
 # GRACEFUL SHUTDOWN
 # ──────────────────────────────────────────────────────────
 
-def handle_sigterm(signum, frame):
+def shutdown_handler(signum, frame):
     """
-    SIGTERM là signal platform gửi khi muốn dừng container.
-    Khác với SIGKILL (không thể catch được).
+    Handler cho SIGTERM/SIGINT từ orchestrator hoặc Ctrl+C.
 
-    uvicorn bắt SIGTERM tự động và gọi lifespan shutdown.
-    Hàm này để log thêm thông tin.
+    Flow:
+    1) Mark not-ready để ngừng nhận request mới
+    2) Trả quyền lại cho default handler của process
+    3) Re-send signal để uvicorn thực hiện shutdown chuẩn (lifespan)
     """
-    logger.info(f"Received signal {signum} — uvicorn will handle graceful shutdown")
+    global _is_ready
+    _is_ready = False
+
+    logger.info(f"Received signal {signum} — stop accepting new requests")
+
+    # Handover lại cho uvicorn/default shutdown path.
+    signal.signal(signum, signal.SIG_DFL)
+    os.kill(os.getpid(), signum)
 
 
-signal.signal(signal.SIGTERM, handle_sigterm)
-signal.signal(signal.SIGINT, handle_sigterm)
+signal.signal(signal.SIGTERM, shutdown_handler)
+signal.signal(signal.SIGINT, shutdown_handler)
 
 
 if __name__ == "__main__":
