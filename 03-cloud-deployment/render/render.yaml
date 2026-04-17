@@ -46,6 +46,10 @@ services:
     name: agent-cache
     plan: free
     maxmemoryPolicy: allkeys-lru
+    ipAllowList:
+      # Chỉ cho phép truy cập nội bộ giữa các service trong Render
+      - source: private
+        description: internal Render network only
 
 # ============================================================
 # Cách deploy:
